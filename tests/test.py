@@ -1,6 +1,6 @@
 import unittest
 import math
-from text_randomizer.text_randomizer import TextRandomizer
+from text_randomizer import TextRandomizer
 
 
 class TestRandomizer(unittest.TestCase):
