@@ -55,8 +55,7 @@ for i in range(0,10):
     print(text_rnd2.get_text())
 ```
 
-You can get number of all possible variants by calling TextRandomizer.variants_number() method. But if you use randomize functions
-- this value will be imprecise.
+You can get number of all possible variants by calling TextRandomizer.variants_number() method. But if you use randomize functions - this value will be imprecise.
 
 For example - 'start {word1 | word2} end' - will give you 2 variants. And 'start {word1 | word2} $UUID end' will give you infinite variants.
 
