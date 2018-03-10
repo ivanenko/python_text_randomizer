@@ -54,3 +54,23 @@ text_rnd2.parse()
 for i in range(0,10):
     print(text_rnd2.get_text())
 ```
+
+You can get number of all possible variants by calling TextRandomizer.variants_number() method. But if you use randomize functions
+- this value will be imprecise.
+
+For example - 'start {word1 | word2} end' - will give you 2 variants. And 'start {word1 | word2} $UUID end' will give you infinite variants.
+
+Next example shows how to register your own function. Do it before parse() call
+
+```python
+text_rnd = TextRandomizer('$YOUR_FUNC1(5, 10) and $FUNC2(param1, param2)', parse=False)
+
+# use simple callable for function
+text_rnd.add_function('FUNC2', lambda p1, p2: '{} and {}'.format(p1, p2))
+
+# use dictionary for more complicated cases.
+text_rnd.add_function('YOUR_FUNC1', {'callable': lambda x, y: randint(x,y), 'coerce': int})
+
+text_rnd.parse()
+print(text_rnd.get_text())
+```

@@ -29,6 +29,15 @@ class TextRandomizer(object):
         else:
             raise Exception('Template not parsed yet')
 
+    def variants_number(self):
+        if self.tree:
+            return self.tree.variants_number()
+        else:
+            raise Exception('Template not parsed yet')
+
+    def reset(self):
+        self.tree = None
+
     def parse(self):
         i = 0
         self.tree = Node()

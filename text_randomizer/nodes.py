@@ -22,6 +22,13 @@ class Node(object):
     def concat(self, index):
         return None
 
+    def variants_number(self):
+        res = 0
+        for n in self._subnodes:
+            res += n.variants_number()
+
+        return res
+
 
 class StringNode(Node):
 
@@ -40,6 +47,9 @@ class StringNode(Node):
 
         return self
 
+    def variants_number(self):
+        return 1
+
 
 class SeriesNode(Node):
 
@@ -48,6 +58,13 @@ class SeriesNode(Node):
 
     def concat(self, index):
         return StringNode(self, index)
+
+    def variants_number(self):
+        res = 1
+        for n in self._subnodes:
+            res *= n.variants_number()
+
+        return res
 
 
 class SynonymsNode(Node):
@@ -77,6 +94,16 @@ class MixingNode(Node):
         texts = [c.get_text(template) for c in self._subnodes]
         return self.separator.join(texts)
 
+    def variants_number(self):
+        res = 1
+        for i in range(2, len(self._subnodes)+1):
+            res *= i
+
+        for n in self._subnodes:
+            res *= n.variants_number()
+
+        return res
+
 
 class FunctionNode(Node):
 
@@ -94,3 +121,6 @@ class FunctionNode(Node):
 
     def get_text(self, template):
         return str(self._callable(*self._args))
+
+    def variants_number(self):
+        return 1
