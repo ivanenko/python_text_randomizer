@@ -2,6 +2,7 @@ import uuid
 import datetime
 from random import random, randint
 from .nodes import Node, SeriesNode, StringNode, MixingNode, SynonymsNode, FunctionNode
+#from nodes import Node, SeriesNode, StringNode, MixingNode, SynonymsNode, FunctionNode
 
 
 class TextRandomizer(object):
@@ -25,7 +26,18 @@ class TextRandomizer(object):
 
     def get_text(self):
         if self.tree:
-            return self.tree.get_text(self.template)
+            result = []
+            for indexes in self.tree.get_indexes():
+                if indexes:
+                    if type(indexes) == list:
+                        result.append(self.template[indexes[0]: indexes[1]])
+                    else:
+                        result.append(indexes)
+                else:
+                    result.append(" ")
+
+            return ''.join(result)
+            #return re.sub('\s+', ' ', res)
         else:
             raise Exception('Template not parsed yet')
 
@@ -82,6 +94,7 @@ class TextRandomizer(object):
                 if func:
                     current_node = self._closest_series_node(current_node)
                     FunctionNode(current_node, func, *func_args)
+                    continue
                 else:
                     i = start_func
                     current_node = current_node.concat(i)
@@ -93,12 +106,12 @@ class TextRandomizer(object):
             i += 1
 
     def _get_function_name(self, i):
-        start = i
         i += 1
+        start = i
         while self.template[i].isalnum() or self.template[i] == '_':
             i += 1
 
-        func_name = self.template[start+1: i]
+        func_name = self.template[start: i]
         return func_name, i
 
     def _get_function_args(self, i):
@@ -109,6 +122,7 @@ class TextRandomizer(object):
             while self.template[i] != ')':
                 i += 1
             args_string = self.template[start: i]
+            i += 1
             if len(args_string.strip()) > 0:
                 args = args_string.split(',')
 
@@ -123,25 +137,27 @@ class TextRandomizer(object):
             return None
 
     def _get_separator(self, i):
-        separator = ' '
+        separator = None
         if (i+1) < len(self.template) and self.template[i+1] == '+':
             i += 2
             start = i
             while (i+1) < len(self.template) and self.template[i] != '+':
                 i += 1
-            separator = self.template[start: i]
+            separator = [start, i]
 
         return separator, i
 
 
 if __name__ == '__main__':
 
-    # template = 'sss [a|dd [+=+b1|b2]] end'
-    # template = '[+==+ooo|www]|asd| [aaa|$RANDINT(1,10)|{d1|d2|[aaaaa|zzzzzz]}] sss  zzz'
-    template = '{a|b|c} ooo $AAA(2, 10) $NOW(%H:%M:%S) end'
+    #template = 'sss [a|dd [+=+b1|b2]] end'
+    #template = '[+==+ooo|www]|asd| [aaa|$RANDINT(1,10)|{d1|d2|[aaaaa|zzzzzz]}] sss  zzz'
+    #template = '[+==+ooo|www] asd [aaa|$RANDINT(1,10)|{d1|d2|[aaaaa|zzzzzz]}] sss  zzz'
+    template = '{a|b|c} $DDD ooo $AAA(1,5) www $NOW(%H:%M:%S) end'
 
     text_rnd = TextRandomizer(template, parse=False)
     text_rnd.add_function('AAA', {'callable': lambda x, y: randint(x,y), 'coerce': int})
+    text_rnd.add_function('DDD', {'callable': lambda: 'test_string', 'coerce': str})
     text_rnd.parse()
     print(text_rnd.get_text())
     print(text_rnd.get_text())

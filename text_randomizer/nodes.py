@@ -14,10 +14,12 @@ class Node(object):
     def add_child(self, node):
         self._subnodes.append(node)
 
-    def get_text(self, template):
-        res = ' '.join([child.get_text(template) for child in self._subnodes])
-        return re.sub('\s+', ' ', res)
-        #return res
+    def get_indexes(self):
+        indexes = []
+        for node in self._subnodes:
+            indexes.extend(node.get_indexes())
+
+        return indexes
 
     def concat(self, index):
         return None
@@ -36,8 +38,8 @@ class StringNode(Node):
         super(StringNode, self).__init__(parent)
         self._str_indexes = [[index, index+1], ]
 
-    def get_text(self, template):
-        return ''.join([template[i[0]: i[1]] for i in self._str_indexes])
+    def get_indexes(self):
+        return self._str_indexes
 
     def concat(self, index):
         if self._str_indexes and self._str_indexes[-1][1] == index:
@@ -52,9 +54,6 @@ class StringNode(Node):
 
 
 class SeriesNode(Node):
-
-    def get_text(self, template):
-        return ' '.join([node.get_text(template) for node in self._subnodes])
 
     def concat(self, index):
         return StringNode(self, index)
@@ -73,26 +72,32 @@ class SynonymsNode(Node):
         super(SynonymsNode, self).__init__(parent)
         self._used_nodes = []
 
-    def get_text(self, template):
+    def get_indexes(self):
         if not self._used_nodes:
             self._used_nodes = list(range(0, len(self._subnodes)))
 
         random_index = choice(self._used_nodes)
         self._used_nodes.remove(random_index)
 
-        return self._subnodes[random_index].get_text(template)
+        return self._subnodes[random_index].get_indexes()
 
 
 class MixingNode(Node):
 
-    def __init__(self, parent=None, separator=' '):
+    def __init__(self, parent=None, separator=None):
         super(MixingNode, self).__init__(parent)
         self.separator = separator
 
-    def get_text(self, template):
+    def get_indexes(self):
         shuffle(self._subnodes)
-        texts = [c.get_text(template) for c in self._subnodes]
-        return self.separator.join(texts)
+        result = []
+        for node in self._subnodes:
+            result.extend(node.get_indexes())
+            result.append(self.separator)
+
+        # remove last separator item
+        result = result[:-1]
+        return result
 
     def variants_number(self):
         res = 1
@@ -119,7 +124,7 @@ class FunctionNode(Node):
 
         self._args = [_coerce(a) for a in args]
 
-    def get_text(self, template):
+    def get_indexes(self):
         return str(self._callable(*self._args))
 
     def variants_number(self):
